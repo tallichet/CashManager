@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using CashManager.Models;
 using CashManager.Models.ManageViewModels;
 using CashManager.Services;
+using CashManager.Data;
 
 namespace CashManager.Controllers
 {
@@ -25,7 +26,7 @@ namespace CashManager.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
-
+        private readonly ApplicationDbContext _dbContext;
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
         public ManageController(
@@ -33,13 +34,15 @@ namespace CashManager.Controllers
           SignInManager<ApplicationUser> signInManager,
           IEmailSender emailSender,
           ILogger<ManageController> logger,
-          UrlEncoder urlEncoder)
+          UrlEncoder urlEncoder,
+          ApplicationDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _logger = logger;
             _urlEncoder = urlEncoder;
+            _dbContext = dbContext;
         }
 
         [TempData]
@@ -283,6 +286,26 @@ namespace CashManager.Controllers
 
             StatusMessage = "The external login was added.";
             return RedirectToAction(nameof(ExternalLogins));
+        }
+
+        [AllowAnonymous]
+        [HttpPost("/admin/seed-data")]
+        public async Task<IActionResult> InitData()
+        {
+            if (_userManager.Users.Any(u => u.UserName == "cedric.tallichet@burningbox.ch")) return null;
+
+            await _userManager.CreateAsync(new ApplicationUser { UserName = "cedric.tallichet@burningbox.ch" }, "Test@123");
+            await _userManager.CreateAsync(new ApplicationUser { UserName = "david.menoud@burningbox.ch" }, "Test@123");
+
+            _dbContext.Product.AddRange(
+                new Product { Name = "Coca", Price = 1.5 },
+                new Product { Name = "Fanta", Price = 1.5 },
+                new Product { Name = "Rivella Bleu", Price = 1.5 },
+                new Product { Name = "Mars", Price = 1 },
+                new Product { Name = "Twix", Price = .5 }
+            );
+
+            return Ok();
         }
 
         [HttpPost]
