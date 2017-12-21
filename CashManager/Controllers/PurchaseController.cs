@@ -39,7 +39,6 @@ namespace CashManager.Controllers
                 User = _applicationDbContext.Users.Single(u => u.NormalizedUserName == username.ToUpper()),
             };
             _applicationDbContext.Purchase.Add(newPurchase);
-            await _applicationDbContext.SaveChangesAsync();
 
             return Ok();
         }
