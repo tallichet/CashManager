@@ -1,0 +1,2 @@
+GET http://localhost:53868/products/1/purchases
+

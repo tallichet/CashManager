@@ -17,28 +17,31 @@ namespace CashManager.Controllers
             _applicationDbContext = applicationDbContext;
         }
 
-        [HttpGet]
+        [HttpGet("/products/{productId}/purchases")]
         public IEnumerable<Purchase> GetPurchaseForByProduct(int productId)
         {
             return _applicationDbContext.Purchase.Include("User").ToList().Where(p => p.Product.Id == productId);
         }
 
-        [HttpGet]
-        public IEnumerable<Purchase> GetPurchaseForByUser(string user)
+        [HttpGet("/user/{username}/purchases")]
+        public IEnumerable<Purchase> GetPurchaseForByUser(string username)
         {
-            return _applicationDbContext.Purchase.Where(p => p.User.Id == user);
+            return _applicationDbContext.Purchase.Where(p => p.User.NormalizedUserName == username.ToUpper());
         }
 
-        [HttpGet]
-        public void Add(string userId, int productId)
+        [HttpGet("/user/{username}/purchases/add")]
+        public async Task<IActionResult> Add(string username, int productId)
         {
 
             Purchase newPurchase = new Purchase()
             {
                 Product = _applicationDbContext.Product.Find(productId),
-                User = _applicationDbContext.Users.Find(userId),
+                User = _applicationDbContext.Users.Single(u => u.NormalizedUserName == username.ToUpper()),
             };
             _applicationDbContext.Purchase.Add(newPurchase);
+            await _applicationDbContext.SaveChangesAsync();
+
+            return Ok();
         }
 
     }

@@ -292,18 +292,24 @@ namespace CashManager.Controllers
         [HttpPost("/admin/seed-data")]
         public async Task<IActionResult> InitData()
         {
-            if (_userManager.Users.Any(u => u.UserName == "cedric.tallichet@burningbox.ch")) return null;
+            if (_userManager.Users.Any(u => u.NormalizedUserName == "cedric.tallichet@burningbox.ch".ToUpper()) == false)
+            {
+                await _userManager.CreateAsync(new ApplicationUser { UserName = "cedric.tallichet@burningbox.ch" }, "Test@123");
+                await _userManager.CreateAsync(new ApplicationUser { UserName = "david.menoud@burningbox.ch" }, "Test@123");
+            }
 
-            await _userManager.CreateAsync(new ApplicationUser { UserName = "cedric.tallichet@burningbox.ch" }, "Test@123");
-            await _userManager.CreateAsync(new ApplicationUser { UserName = "david.menoud@burningbox.ch" }, "Test@123");
-
-            _dbContext.Product.AddRange(
-                new Product { Name = "Coca", Price = 1.5 },
-                new Product { Name = "Fanta", Price = 1.5 },
-                new Product { Name = "Rivella Bleu", Price = 1.5 },
-                new Product { Name = "Mars", Price = 1 },
-                new Product { Name = "Twix", Price = .5 }
-            );
+            if (_dbContext.Product.Any() == false)
+            {
+                _dbContext.Product.AddRange(
+                    new Product { Name = "Coca", Price = 1.5 },
+                    new Product { Name = "Fanta", Price = 1.5 },
+                    new Product { Name = "Rivella Bleu", Price = 1.5 },
+                    new Product { Name = "Mars", Price = 1 },
+                    new Product { Name = "Twix", Price = .5 }
+                );
+    
+                await _dbContext.SaveChangesAsync();
+            }
 
             return Ok();
         }
